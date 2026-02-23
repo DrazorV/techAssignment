@@ -42,6 +42,27 @@ public class MatchService {
         return mapper.toResponse(saved, true);
     }
 
+    public List<MatchResponse> createBulk(List<MatchRequest> reqs) {
+        if (reqs == null || reqs.isEmpty()) return List.of();
+
+        List<Match> matches = reqs.stream().map(req -> {
+            validateOddsSpecifiers(req.getOdds());
+            Match match = mapper.toEntity(req);
+            if (req.getOdds() != null) {
+                req.getOdds().forEach(o -> {
+                    MatchOdds odd = mapper.toEntity(o);
+                    odd.setMatch(match);
+                    match.getOdds().add(odd);
+                });
+            }
+            return match;
+        }).toList();
+
+        return matchRepository.saveAll(matches).stream()
+                .map(m -> mapper.toResponse(m, true))
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public MatchResponse get(Long id) {
         Match match = matchRepository.findById(id).orElseThrow(() -> new NotFoundException("Match not found: " + id));
@@ -49,7 +70,12 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public List<MatchResponse> list() {
+    public List<MatchResponse> list(boolean includeOdds) {
+
+        if (includeOdds) {
+            return matchRepository.findAllWithOdds().stream().map(m -> mapper.toResponse(m, true)).toList();
+        }
+
         return matchRepository.findAll().stream().map(m -> mapper.toResponse(m, false)).toList();
     }
 
@@ -63,21 +89,24 @@ public class MatchService {
         // - odds == null -> leave unchanged
         // - odds != null -> replace all
         if (req.getOdds() != null) {
-            match.getOdds().clear(); // orphanRemoval=true -> deletes removed odds
+            match.getOdds().clear();
+            matchRepository.flush();
+
             for (MatchOddsRequest o : req.getOdds()) {
                 MatchOdds odd = mapper.toEntity(o);
                 odd.setMatch(match);
                 match.getOdds().add(odd);
             }
+
+            matchRepository.flush();
         }
 
-        // no explicit save required; entity is managed in txn
         return mapper.toResponse(match, true);
     }
 
     public void delete(Long id) {
         Match match = matchRepository.findById(id).orElseThrow(() -> new NotFoundException("Match not found: " + id));
-        matchRepository.delete(match); // cascades odds delete
+        matchRepository.delete(match);
     }
 
     private void validateOddsSpecifiers(List<MatchOddsRequest> odds) {
@@ -86,7 +115,6 @@ public class MatchService {
         Set<String> seen = new HashSet<>();
         for (MatchOddsRequest o : odds) {
             String spec = (o.getSpecifier() == null) ? null : o.getSpecifier().trim();
-            // @NotBlank will catch null/blank, this is just defensive
             if (spec != null && !seen.add(spec)) {
                 throw new ConflictException("Duplicate odds specifier in request payload: " + spec);
             }

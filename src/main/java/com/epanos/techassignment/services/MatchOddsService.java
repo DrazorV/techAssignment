@@ -25,7 +25,7 @@ public class MatchOddsService {
     public MatchOddsResponse create(Long matchId, MatchOddsRequest req) {
         Match match = matchRepository.findById(matchId).orElseThrow(() -> new NotFoundException("Match not found: " + matchId));
 
-        // prevent duplicate specifier per match (also enforced by DB constraint)
+        // prevent duplicate specifier per match
         if (matchOddsRepository.existsByMatchIdAndSpecifier(matchId, req.getSpecifier())) {
             throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + req.getSpecifier());
         }
@@ -38,6 +38,51 @@ public class MatchOddsService {
 
         MatchOdds saved = matchOddsRepository.save(odds);
         return toResponse(saved);
+    }
+
+    public List<MatchOddsResponse> createBulk(Long matchId, List<MatchOddsRequest> reqs) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException("Match not found: " + matchId));
+
+        if (reqs == null || reqs.isEmpty()) {
+            return List.of();
+        }
+
+        // 1) Validate duplicates inside payload
+        validateUniqueSpecifiers(reqs);
+
+        // 2) Block if any specifier already exists in DB for this match
+        for (MatchOddsRequest r : reqs) {
+            if (matchOddsRepository.existsByMatchIdAndSpecifier(matchId, r.getSpecifier())) {
+                throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + r.getSpecifier());
+            }
+        }
+
+        // 3) Create entities
+        List<MatchOdds> oddsEntities = reqs.stream()
+                .map(r -> MatchOdds.builder()
+                        .match(match)
+                        .specifier(r.getSpecifier())
+                        .odd(r.getOdd())
+                        .build())
+                .toList();
+
+        // 4) Persist as a batch
+        List<MatchOdds> saved = matchOddsRepository.saveAll(oddsEntities);
+        matchOddsRepository.flush();
+
+        return saved.stream().map(this::toResponse).toList();
+    }
+
+    private void validateUniqueSpecifiers(List<MatchOddsRequest> reqs) {
+        // normalize to avoid duplicates slipping through
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (MatchOddsRequest r : reqs) {
+            String spec = (r.getSpecifier() == null) ? null : r.getSpecifier().trim();
+            if (spec != null && !seen.add(spec)) {
+                throw new ConflictException("Duplicate odds specifier in request payload: " + spec);
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -76,6 +121,14 @@ public class MatchOddsService {
         MatchOdds odds = matchOddsRepository.findByIdAndMatchId(oddId, matchId)
                 .orElseThrow(() -> new NotFoundException("Odds not found: " + oddId + " for match " + matchId));
         matchOddsRepository.delete(odds);
+    }
+
+    @Transactional
+    public void deleteAll(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException("Match not found: " + matchId));
+
+        match.getOdds().clear();
     }
 
     private MatchOddsResponse toResponse(MatchOdds odds) {
