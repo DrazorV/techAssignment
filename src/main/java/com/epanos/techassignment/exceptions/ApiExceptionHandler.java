@@ -1,4 +1,4 @@
-package com.epanos.techassignment.configs;
+package com.epanos.techassignment.exceptions;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,12 +16,14 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiError> notFound(NotFoundException ex, HttpServletRequest req) {
+        System.err.println("Unexpected error: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiError.of(404, "NOT_FOUND", ex.getMessage(), req.getRequestURI()));
     }
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiError> conflict(ConflictException ex, HttpServletRequest req) {
+        System.err.println("Unexpected error: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiError.of(409, "CONFLICT", ex.getMessage(), req.getRequestURI()));
     }
@@ -31,18 +33,21 @@ public class ApiExceptionHandler {
         String msg = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining(", "));
+        System.err.println("Unexpected error: " + ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(ApiError.of(400, "VALIDATION_ERROR", msg, req.getRequestURI()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> dbConstraint(DataIntegrityViolationException ex, HttpServletRequest req) {
+        System.err.println("Unexpected error: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiError.of(409, "DB_CONSTRAINT", "Database constraint violation", req.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> generic(Exception ex, HttpServletRequest req) {
+        System.err.println("Unexpected error: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiError.of(500, "INTERNAL_ERROR", "Unexpected error", req.getRequestURI()));
     }

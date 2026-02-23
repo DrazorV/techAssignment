@@ -2,12 +2,14 @@ package com.epanos.techassignment.models.dto;
 
 import com.epanos.techassignment.models.enums.Sport;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
 @Schema(description = "Request payload used for creating or updating a Match. All fields are required. For updates, this represents a full replacement (PUT semantics).")
@@ -36,4 +38,8 @@ public class MatchRequest {
     @NotNull
     @Schema(description = "Sport type (1 = Football, 2 = Basketball)", example = "1", allowableValues = {"1", "2"}, requiredMode = Schema.RequiredMode.REQUIRED)
     private Sport sport;
+
+    @Valid
+    @Schema(description = "Optional list of match odds. If present during update, existing odds will be replaced.", nullable = true)
+    private List<MatchOddsRequest> odds;
 }

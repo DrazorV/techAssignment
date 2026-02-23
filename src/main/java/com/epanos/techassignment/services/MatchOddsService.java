@@ -1,7 +1,7 @@
 package com.epanos.techassignment.services;
 
-import com.epanos.techassignment.configs.ConflictException;
-import com.epanos.techassignment.configs.NotFoundException;
+import com.epanos.techassignment.exceptions.ConflictException;
+import com.epanos.techassignment.exceptions.NotFoundException;
 import com.epanos.techassignment.models.dto.MatchOddsRequest;
 import com.epanos.techassignment.models.dto.MatchOddsResponse;
 import com.epanos.techassignment.models.entities.Match;

@@ -1,4 +1,4 @@
-package com.epanos.techassignment.configs;
+package com.epanos.techassignment.exceptions;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {
