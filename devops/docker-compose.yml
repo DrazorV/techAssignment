@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16
+    container_name: techAssignment-db
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5433:5432"     # host:container (avoid conflict with local postgres on 5432)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: devops/Dockerfile
+    container_name: techAssignment-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/app
+      DB_USER: app
+      DB_PASS: app
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
