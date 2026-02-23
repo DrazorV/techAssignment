@@ -1,6 +1,6 @@
-# techAssignment
+# Technical Assignment
 
-Spring Boot REST API with PostgreSQL and OpenAPI/Swagger UI documentation.
+Spring Boot REST API with PostgreSQL and OpenAPI/Swagger UI documentation.  
 An optional UI is included (served by the backend) to interact with the endpoints.
 
 ## Tech Stack
@@ -19,16 +19,23 @@ An optional UI is included (served by the backend) to interact with the endpoint
 - Docker Compose v2 (`docker compose`)
 
 ### Local development
-- JDK 17 (recommended: Temurin 17, same major version as the Docker build/runtime images)
+- JDK 17 (recommended: Temurin 17/Oracle 17, same major version as the Docker build/runtime images)
 - Maven (or use the included Maven Wrapper: `./mvnw`)
 
 ---
 
 ## Run with Docker Compose
 
-The Docker Compose stack lives under `devops/`.
+The Docker Compose stack lives under `docker/`.
 
 From the repository root:
 
 ```bash
 docker compose -f devops/docker-compose.yml up --build
+```
+
+Once the application starts:
+
+Swagger UI → http://localhost:8080/swagger-ui
+
+OpenAPI JSON → http://localhost:8080/v3/api-docs
