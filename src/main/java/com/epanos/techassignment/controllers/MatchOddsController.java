@@ -1,7 +1,9 @@
 package com.epanos.techassignment.controllers;
 
+import com.epanos.techassignment.exceptions.NotFoundException;
 import com.epanos.techassignment.models.dto.MatchOddsRequest;
 import com.epanos.techassignment.models.dto.MatchOddsResponse;
+import com.epanos.techassignment.models.entities.MatchOdds;
 import com.epanos.techassignment.services.MatchOddsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,6 +73,34 @@ public class MatchOddsController {
     @PutMapping("/{oddId}")
     public MatchOddsResponse update(@PathVariable Long matchId, @PathVariable Long oddId, @Valid @RequestBody MatchOddsRequest request) {
         return matchOddsService.update(matchId, oddId, request);
+    }
+
+    @Operation(
+            summary = "Get match odd by id",
+            description = "Returns a specific odd belonging to the specified match.",
+            operationId = "getMatchOddById"
+    )
+    @ApiResponse(responseCode = "200", description = "Match odd returned successfully")
+    @ApiResponse(responseCode = "404", description = "Match or odd not found", content = @Content)
+    @GetMapping("/{oddId}")
+    public MatchOddsResponse get(
+            @Parameter(description = "Match id", example = "1", required = true)
+            @PathVariable Long matchId,
+            @Parameter(description = "Odd id", example = "10", required = true)
+            @PathVariable Long oddId) {
+        return matchOddsService.get(matchId, oddId);
+    }
+
+    @Operation(
+            summary = "List match odds",
+            description = "Returns all odds for the specified match.",
+            operationId = "listMatchOdds"
+    )
+    @ApiResponse(responseCode = "200", description = "Odds returned successfully")
+    @ApiResponse(responseCode = "404", description = "Match not found", content = @Content)
+    @GetMapping
+    public List<MatchOddsResponse> listByMatch(@Parameter(description = "Match id", example = "1", required = true) @PathVariable Long matchId) {
+        return matchOddsService.listByMatch(matchId);
     }
 
     @Operation(
