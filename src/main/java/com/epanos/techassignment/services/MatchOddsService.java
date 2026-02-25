@@ -27,14 +27,16 @@ public class MatchOddsService {
     public MatchOddsResponse create(Long matchId, MatchOddsRequest req) {
         Match match = matchRepository.findById(matchId).orElseThrow(() -> new NotFoundException("Match not found: " + matchId));
 
+        String specifier = req.getSpecifier().trim();
+
         // prevent duplicate specifier per match
-        if (matchOddsRepository.existsByMatchIdAndSpecifier(matchId, req.getSpecifier())) {
-            throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + req.getSpecifier());
+        if (matchOddsRepository.existsByMatchIdAndSpecifier(matchId, specifier)) {
+            throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + specifier);
         }
 
         MatchOdds odds = MatchOdds.builder()
                 .match(match)
-                .specifier(req.getSpecifier())
+                .specifier(specifier)
                 .odd(req.getOdd())
                 .build();
 
@@ -55,8 +57,9 @@ public class MatchOddsService {
 
         // 2) Block if any specifier already exists in DB for this match
         for (MatchOddsRequest r : reqs) {
-            if (matchOddsRepository.existsByMatchIdAndSpecifier(matchId, r.getSpecifier())) {
-                throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + r.getSpecifier());
+            String spec = r.getSpecifier().trim();
+            if (matchOddsRepository.existsByMatchIdAndSpecifier(matchId, spec)) {
+                throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + spec);
             }
         }
 
@@ -64,7 +67,7 @@ public class MatchOddsService {
         List<MatchOdds> oddsEntities = reqs.stream()
                 .map(r -> MatchOdds.builder()
                         .match(match)
-                        .specifier(r.getSpecifier())
+                        .specifier(r.getSpecifier().trim())
                         .odd(r.getOdd())
                         .build())
                 .toList();
@@ -131,13 +134,34 @@ public class MatchOddsService {
         MatchOdds odds = matchOddsRepository.findByIdAndMatchId(oddId, matchId)
                 .orElseThrow(() -> new NotFoundException("Odds not found: " + oddId + " for match " + matchId));
 
-        // if specifier changes, enforce uniqueness
-        String newSpec = req.getSpecifier();
-        if (!odds.getSpecifier().equals(newSpec) && matchOddsRepository.existsByMatchIdAndSpecifier(matchId, newSpec)) {
+        String newSpec = req.getSpecifier().trim();
+
+        // only block if a DIFFERENT odd already owns this specifier
+        if (matchOddsRepository.existsByMatchIdAndSpecifierAndIdNot(matchId, newSpec, oddId)) {
             throw new ConflictException("Odds specifier already exists for match " + matchId + ": " + newSpec);
         }
 
-        odds.setSpecifier(req.getSpecifier());
+        odds.setSpecifier(newSpec);
+        odds.setOdd(req.getOdd());
+
+        return toResponse(odds);
+    }
+
+    /**
+     * Updates an existing odd for the specified match, looked up by the specifier in the request body.
+     * The odd is found using the specifier, and its value is updated.
+     *
+     * @param matchId the match ID
+     * @param req     the match odds request containing the specifier to look up and the new odd value
+     * @return the updated match odds response
+     * @throws NotFoundException if no odd with the given specifier exists for the match
+     */
+    public MatchOddsResponse updateBySpecifier(Long matchId, MatchOddsRequest req) {
+        String specifier = req.getSpecifier().trim();
+        MatchOdds odds = matchOddsRepository.findByMatchIdAndSpecifier(matchId, specifier)
+                .orElseThrow(() -> new NotFoundException(
+                        "Odds with specifier '" + specifier + "' not found for match " + matchId));
+
         odds.setOdd(req.getOdd());
 
         return toResponse(odds);

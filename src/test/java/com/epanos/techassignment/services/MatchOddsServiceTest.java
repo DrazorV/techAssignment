@@ -257,11 +257,11 @@ class MatchOddsServiceTest {
         oddsRequest.setOdd(BigDecimal.valueOf(3.0));
 
         when(matchOddsRepository.findByIdAndMatchId(10L, 1L)).thenReturn(Optional.of(oddsEntity));
+        when(matchOddsRepository.existsByMatchIdAndSpecifierAndIdNot(1L, "X", 10L)).thenReturn(false);
 
         MatchOddsResponse result = matchOddsService.update(1L, 10L, oddsRequest);
 
         assertThat(result.getOdd()).isEqualByComparingTo(BigDecimal.valueOf(3.0));
-        verify(matchOddsRepository, never()).existsByMatchIdAndSpecifier(anyLong(), anyString());
     }
 
     @Test
@@ -272,7 +272,7 @@ class MatchOddsServiceTest {
         updateReq.setOdd(BigDecimal.valueOf(2.5));
 
         when(matchOddsRepository.findByIdAndMatchId(10L, 1L)).thenReturn(Optional.of(oddsEntity));
-        when(matchOddsRepository.existsByMatchIdAndSpecifier(1L, "2")).thenReturn(false);
+        when(matchOddsRepository.existsByMatchIdAndSpecifierAndIdNot(1L, "2", 10L)).thenReturn(false);
 
         MatchOddsResponse result = matchOddsService.update(1L, 10L, updateReq);
 
@@ -287,7 +287,7 @@ class MatchOddsServiceTest {
         updateReq.setOdd(BigDecimal.valueOf(2.0));
 
         when(matchOddsRepository.findByIdAndMatchId(10L, 1L)).thenReturn(Optional.of(oddsEntity));
-        when(matchOddsRepository.existsByMatchIdAndSpecifier(1L, "1")).thenReturn(true);
+        when(matchOddsRepository.existsByMatchIdAndSpecifierAndIdNot(1L, "1", 10L)).thenReturn(true);
 
         assertThatThrownBy(() -> matchOddsService.update(1L, 10L, updateReq))
                 .isInstanceOf(ConflictException.class)
@@ -301,6 +301,37 @@ class MatchOddsServiceTest {
 
         assertThatThrownBy(() -> matchOddsService.update(1L, 99L, oddsRequest))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    // ── updateBySpecifier ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("updateBySpecifier: should update odd value found by specifier")
+    void updateBySpecifier_success() {
+        MatchOddsRequest updateReq = new MatchOddsRequest();
+        updateReq.setSpecifier("X");
+        updateReq.setOdd(BigDecimal.valueOf(5.0));
+
+        when(matchOddsRepository.findByMatchIdAndSpecifier(1L, "X")).thenReturn(Optional.of(oddsEntity));
+
+        MatchOddsResponse result = matchOddsService.updateBySpecifier(1L, updateReq);
+
+        assertThat(result.getOdd()).isEqualByComparingTo(BigDecimal.valueOf(5.0));
+        assertThat(result.getSpecifier()).isEqualTo("X");
+    }
+
+    @Test
+    @DisplayName("updateBySpecifier: should throw NotFoundException when specifier not found")
+    void updateBySpecifier_notFound() {
+        MatchOddsRequest updateReq = new MatchOddsRequest();
+        updateReq.setSpecifier("Z");
+        updateReq.setOdd(BigDecimal.valueOf(1.5));
+
+        when(matchOddsRepository.findByMatchIdAndSpecifier(1L, "Z")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> matchOddsService.updateBySpecifier(1L, updateReq))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Odds with specifier 'Z' not found for match 1");
     }
 
     // ── delete ──────────────────────────────────────────────────────────────

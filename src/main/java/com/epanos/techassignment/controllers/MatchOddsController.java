@@ -114,6 +114,33 @@ public class MatchOddsController {
     }
 
     /**
+     * Updates an existing odd for the specified match, looked up by the specifier in the request body.
+     * The odd is found using the specifier from the body, and its value is updated.
+     *
+     * @param matchId the ID of the match containing the odd
+     * @param request the match odds request containing the specifier to look up and the new odd value
+     * @return the updated match odds response
+     * @throws NotFoundException if no odd with the given specifier exists for the match
+     */
+    @Operation(
+            summary = "Update match odd by specifier",
+            description = "Updates an existing odd looked up by the specifier provided in the request body. " +
+                    "The specifier in the body identifies which odd to update.",
+            operationId = "updateMatchOddBySpecifier"
+    )
+    @ApiResponse(responseCode = "200", description = "Match odd updated successfully")
+    @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
+    @ApiResponse(responseCode = "404", description = "Match or odd with given specifier not found", content = @Content)
+    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    @PutMapping()
+    public MatchOddsResponse updateBySpecifier(
+            @Parameter(description = "Match id", example = "1", required = true)
+            @PathVariable Long matchId,
+            @Valid @RequestBody MatchOddsRequest request) {
+        return matchOddsService.updateBySpecifier(matchId, request);
+    }
+
+    /**
      * Retrieves a specific odd belonging to the specified match.
      *
      * @param matchId the ID of the match containing the odd

@@ -105,7 +105,26 @@ public class MatchService {
     @Transactional(readOnly = true)
     public Page<MatchResponse> listPage(boolean includeOdds, Pageable pageable) {
         if (includeOdds) {
-            return matchRepository.findAllWithOdds(pageable).map(m -> mapper.toResponse(m, true));
+            // Step 1: get paginated IDs only (proper DB-level pagination)
+            Page<Long> idsPage = matchRepository.findAllIds(pageable);
+
+            if (idsPage.isEmpty()) {
+                return new org.springframework.data.domain.PageImpl<>(List.of(), pageable, 0);
+            }
+
+            // Step 2: fetch full entities with odds for those IDs
+            List<Match> matches = matchRepository.findAllWithOddsByIds(idsPage.getContent());
+
+            // Preserve the page order from step 1
+            java.util.Map<Long, Match> matchMap = matches.stream()
+                    .collect(java.util.stream.Collectors.toMap(Match::getId, m -> m));
+
+            List<MatchResponse> content = idsPage.getContent().stream()
+                    .map(matchMap::get)
+                    .map(m -> mapper.toResponse(m, true))
+                    .toList();
+
+            return new org.springframework.data.domain.PageImpl<>(content, pageable, idsPage.getTotalElements());
         }
 
         return matchRepository.findAll(pageable).map(m -> mapper.toResponse(m, false));

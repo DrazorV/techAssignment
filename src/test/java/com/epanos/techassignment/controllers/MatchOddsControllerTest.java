@@ -222,6 +222,59 @@ class MatchOddsControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // ── PUT /api/matches/{matchId}/odds (by specifier in body) ─────────────
+
+    @Test
+    @DisplayName("PUT /api/matches/1/odds → 200 on valid update by specifier")
+    void updateBySpecifier_success() throws Exception {
+        MatchOddsResponse updated = MatchOddsResponse.builder()
+                .id(10L).matchId(1L).specifier("X").odd(BigDecimal.valueOf(5.0)).build();
+        when(matchOddsService.updateBySpecifier(eq(1L), any())).thenReturn(updated);
+
+        String body = """
+                {
+                  "specifier": "X",
+                  "odd": 5.0
+                }
+                """;
+
+        mockMvc.perform(put("/api/matches/1/odds")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.specifier").value("X"))
+                .andExpect(jsonPath("$.odd").value(5.0));
+    }
+
+    @Test
+    @DisplayName("PUT /api/matches/1/odds → 404 when specifier not found")
+    void updateBySpecifier_notFound() throws Exception {
+        when(matchOddsService.updateBySpecifier(eq(1L), any()))
+                .thenThrow(new NotFoundException("Odds with specifier 'Z' not found for match 1"));
+
+        String body = """
+                {
+                  "specifier": "Z",
+                  "odd": 1.5
+                }
+                """;
+
+        mockMvc.perform(put("/api/matches/1/odds")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/matches/1/odds → 400 on missing body")
+    void updateBySpecifier_missingBody() throws Exception {
+        mockMvc.perform(put("/api/matches/1/odds")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"));
+    }
+
     // ── DELETE /api/matches/{matchId}/odds/{oddId} ──────────────────────────
 
     @Test

@@ -37,6 +37,15 @@ public interface MatchOddsRepository extends JpaRepository<MatchOdds, Long> {
     Optional<MatchOdds> findByIdAndMatchId(Long id, Long matchId);
 
     /**
+     * Retrieves a specific odd by match ID and specifier.
+     *
+     * @param matchId the match ID
+     * @param specifier the odd specifier
+     * @return optional containing the odd if found
+     */
+    Optional<MatchOdds> findByMatchIdAndSpecifier(Long matchId, String specifier);
+
+    /**
      * Checks if an odd with the given specifier exists for a match.
      *
      * @param matchId the match ID
@@ -44,4 +53,15 @@ public interface MatchOddsRepository extends JpaRepository<MatchOdds, Long> {
      * @return true if exists, false otherwise
      */
     boolean existsByMatchIdAndSpecifier(Long matchId, String specifier);
+
+    /**
+     * Checks if an odd with the given specifier exists for a match, excluding a specific odd ID.
+     * Used during updates to allow the current odd to keep its own specifier.
+     *
+     * @param matchId the match ID
+     * @param specifier the odd specifier
+     * @param id the odd ID to exclude from the check
+     * @return true if another odd with the same specifier exists, false otherwise
+     */
+    boolean existsByMatchIdAndSpecifierAndIdNot(Long matchId, String specifier, Long id);
 }

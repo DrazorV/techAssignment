@@ -239,13 +239,33 @@ class MatchServiceTest {
     @DisplayName("listPage: should return paginated results with odds")
     void listPage_withOdds() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Match> page = new PageImpl<>(List.of(matchEntity), pageable, 1);
+        Page<Long> idsPage = new PageImpl<>(List.of(1L), pageable, 1);
 
-        when(matchRepository.findAllWithOdds(pageable)).thenReturn(page);
+        when(matchRepository.findAllIds(pageable)).thenReturn(idsPage);
+        when(matchRepository.findAllWithOddsByIds(List.of(1L))).thenReturn(List.of(matchEntity));
         when(mapper.toResponse(matchEntity, true)).thenReturn(matchResponse);
 
         Page<MatchResponse> result = matchService.listPage(true, pageable);
+
         assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
+        verify(matchRepository).findAllIds(pageable);
+        verify(matchRepository).findAllWithOddsByIds(List.of(1L));
+    }
+
+    @Test
+    @DisplayName("listPage: should return empty page with odds when no matches exist")
+    void listPage_withOdds_empty() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Long> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(matchRepository.findAllIds(pageable)).thenReturn(emptyPage);
+
+        Page<MatchResponse> result = matchService.listPage(true, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(0);
+        assertThat(result.getContent()).isEmpty();
+        verify(matchRepository, never()).findAllWithOddsByIds(anyList());
     }
 
     @Test
