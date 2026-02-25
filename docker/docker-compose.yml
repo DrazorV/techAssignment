@@ -9,7 +9,7 @@ services:
     ports:
       - "5433:5432"     # host:container (avoid conflict with local postgres on 5432)
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./db/data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d app"]
       interval: 5s
@@ -31,5 +31,3 @@ services:
     ports:
       - "8080:8080"
 
-volumes:
-  pgdata:

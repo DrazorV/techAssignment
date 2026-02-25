@@ -1,0 +1,5 @@
+# Ignore all Postgres data files, keep the folder tracked
+*
+!.gitkeep
+!.gitignore
+
