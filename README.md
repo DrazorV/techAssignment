@@ -34,8 +34,25 @@ From the repository root:
 docker compose -f devops/docker-compose.yml up --build
 ```
 
-Once the application starts:
 
-Swagger UI → http://localhost:8080/swagger-ui
+---
 
-OpenAPI JSON → http://localhost:8080/v3/api-docs
+## Unit Testing
+
+The project includes unit tests covering the service, mapper, and controller layers.
+
+To run all tests:
+
+```bash
+./mvnw test
+```
+
+---
+
+## API Testing
+
+There are two ways to test the API endpoints:
+
+- **Swagger UI** — available at http://localhost:8080/swagger-ui when the application is running. All endpoints are documented and can be tested directly from the browser.
+
+- **Postman Collection** — a ready-to-use collection is included at `postman/Technical Assingment.postman_collection.json`. Import it into Postman to test all endpoints.
