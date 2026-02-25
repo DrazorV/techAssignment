@@ -33,6 +33,12 @@ From the repository root:
 docker compose -f docker/docker-compose.yml up --build
 ```
 
+> **Note:** The PostgreSQL data is stored in `docker/db/data/` (bind mount).
+> If the database container fails to start, make sure the directory exists:
+> ```bash
+> mkdir -p docker/db/data
+> ```
+
 ---
 
 ## Security
