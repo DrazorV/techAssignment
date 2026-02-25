@@ -11,6 +11,7 @@ import com.epanos.techassignment.models.mappers.MatchMapper;
 import com.epanos.techassignment.repositories.MatchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,7 +110,7 @@ public class MatchService {
             Page<Long> idsPage = matchRepository.findAllIds(pageable);
 
             if (idsPage.isEmpty()) {
-                return new org.springframework.data.domain.PageImpl<>(List.of(), pageable, 0);
+                return new PageImpl<>(List.of(), pageable, 0);
             }
 
             // Step 2: fetch full entities with odds for those IDs
@@ -124,7 +125,7 @@ public class MatchService {
                     .map(m -> mapper.toResponse(m, true))
                     .toList();
 
-            return new org.springframework.data.domain.PageImpl<>(content, pageable, idsPage.getTotalElements());
+            return new PageImpl<>(content, pageable, idsPage.getTotalElements());
         }
 
         return matchRepository.findAll(pageable).map(m -> mapper.toResponse(m, false));
