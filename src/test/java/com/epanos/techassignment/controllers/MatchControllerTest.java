@@ -19,6 +19,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import org.springframework.security.test.context.support.WithMockUser;
+
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
@@ -27,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MatchController.class)
+@WithMockUser
 class MatchControllerTest {
 
     @Autowired

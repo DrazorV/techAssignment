@@ -1,7 +1,6 @@
 # Technical Assignment
 
-Spring Boot REST API with PostgreSQL and OpenAPI/Swagger UI documentation.  
-An optional UI is included (served by the backend) to interact with the endpoints.
+Spring Boot REST API with PostgreSQL and OpenAPI/Swagger UI documentation.
 
 ## Tech Stack
 - Java 17
@@ -31,9 +30,29 @@ The Docker Compose stack lives under `docker/`.
 From the repository root:
 
 ```bash
-docker compose -f devops/docker-compose.yml up --build
+docker compose -f docker/docker-compose.yml up --build
 ```
 
+---
+
+## Security
+
+All API endpoints are protected with **HTTP Basic Authentication**.
+
+| Credential | Value   |
+|------------|---------|
+| Username   | `admin` |
+| Password   | `admin` |
+
+The following paths are **publicly accessible** and do not require authentication:
+- `GET /swagger-ui/**` — Swagger UI
+- `GET /v3/api-docs/**` — OpenAPI specification
+- `GET /actuator/health` — Health check
+- `GET /actuator/info` — Application info
+
+The default credentials can be overridden via environment variables:
+- `SECURITY_USER` — username
+- `SECURITY_PASS` — password
 
 ---
 
@@ -53,6 +72,6 @@ To run all tests:
 
 There are two ways to test the API endpoints:
 
-- **Swagger UI** — available at http://localhost:8080/swagger-ui when the application is running. All endpoints are documented and can be tested directly from the browser.
+- **Swagger UI** — available at http://localhost:8080/swagger-ui when the application is running. All endpoints are documented and can be tested directly from the browser. Click the **Authorize** button and enter the credentials above before making requests.
 
-- **Postman Collection** — a ready-to-use collection is included at `postman/Technical Assingment.postman_collection.json`. Import it into Postman to test all endpoints.
+- **Postman Collection** — a ready-to-use collection is included at `postman/Technical Assingment.postman_collection.json`. Import it into Postman to test all endpoints. Make sure to configure Basic Auth with the credentials above in Postman.
