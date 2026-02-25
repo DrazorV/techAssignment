@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
@@ -39,6 +40,28 @@ public class ApiExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         log.warn("Validation error: {}", msg);
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(400, "VALIDATION_ERROR", msg, req.getRequestURI()));
+    }
+
+    /**
+     * Handles validation errors thrown when validating method parameters such as
+     * items inside a List body (e.g. {@code @Valid List<MatchOddsRequest>}).
+     * In Spring Framework 7 / Spring Boot 4, this exception replaces
+     * {@link MethodArgumentNotValidException} for method-level constraint violations.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiError> methodValidation(HandlerMethodValidationException ex, HttpServletRequest req) {
+        String msg = ex.getParameterValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(e -> {
+                    String field = e.getCodes() != null && e.getCodes().length > 0
+                            ? e.getCodes()[e.getCodes().length - 1]
+                            : "field";
+                    return field + ": " + e.getDefaultMessage();
+                })
+                .collect(Collectors.joining(", "));
+        log.warn("Method validation error: {}", msg);
         return ResponseEntity.badRequest()
                 .body(ApiError.of(400, "VALIDATION_ERROR", msg, req.getRequestURI()));
     }
