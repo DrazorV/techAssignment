@@ -1,8 +1,10 @@
-README.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# Docker DB data (bind mount — should never be committed)
+docker/db/data/
 
 ### STS ###
 .apt_generated
