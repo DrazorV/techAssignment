@@ -19,7 +19,7 @@ services:
   api:
     build:
       context: ..
-      dockerfile: /Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: techAssignment-api
     depends_on:
       db:
