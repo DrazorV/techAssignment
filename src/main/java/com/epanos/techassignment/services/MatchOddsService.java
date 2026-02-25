@@ -9,6 +9,8 @@ import com.epanos.techassignment.models.entities.MatchOdds;
 import com.epanos.techassignment.repositories.MatchOddsRepository;
 import com.epanos.techassignment.repositories.MatchRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +87,13 @@ public class MatchOddsService {
         }
     }
 
+    /**
+     * Retrieves all non-paginated odds for a given match.
+     *
+     * @param matchId the match ID
+     * @return list of odds responses
+     * @throws NotFoundException if match not found
+     */
     @Transactional(readOnly = true)
     public List<MatchOddsResponse> listByMatch(Long matchId) {
         // ensure match exists
@@ -92,6 +101,23 @@ public class MatchOddsService {
             throw new NotFoundException("Match not found: " + matchId);
         }
         return matchOddsRepository.findByMatchId(matchId).stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * Retrieves a paginated list of odds for a given match.
+     *
+     * @param matchId the match ID
+     * @param pageable the pagination parameters (page, size, sort)
+     * @return a page of odds responses
+     * @throws NotFoundException if match not found
+     */
+    @Transactional(readOnly = true)
+    public Page<MatchOddsResponse> listByMatchPage(Long matchId, Pageable pageable) {
+        // ensure match exists
+        if (!matchRepository.existsById(matchId)) {
+            throw new NotFoundException("Match not found: " + matchId);
+        }
+        return matchOddsRepository.findByMatchId(matchId, pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

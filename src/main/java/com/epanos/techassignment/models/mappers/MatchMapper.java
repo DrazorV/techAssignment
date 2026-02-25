@@ -36,7 +36,7 @@ public class MatchMapper {
 
     public MatchOdds toEntity(MatchOddsRequest req) {
         return MatchOdds.builder()
-                .specifier(req.getSpecifier())
+                .specifier(req.getSpecifier().trim())
                 .odd(req.getOdd())
                 .build();
     }

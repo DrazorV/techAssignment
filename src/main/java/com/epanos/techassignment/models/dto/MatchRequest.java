@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.List;
 public class MatchRequest {
 
     @NotBlank
+    @Size(min = 1, max = 255, message = "Description must be between 1 and 255 characters")
     @Schema(description = "Human-readable description of the match", example = "OSFP-PAO", requiredMode = Schema.RequiredMode.REQUIRED)
     private String description;
 
@@ -28,10 +30,12 @@ public class MatchRequest {
     private LocalTime matchTime;
 
     @NotBlank
+    @Size(min = 1, max = 100, message = "Team name must be between 1 and 100 characters")
     @Schema(description = "Home team name", example = "OSFP", requiredMode = Schema.RequiredMode.REQUIRED)
     private String teamA;
 
     @NotBlank
+    @Size(min = 1, max = 100, message = "Team name must be between 1 and 100 characters")
     @Schema(description = "Away team name", example = "PAO", requiredMode = Schema.RequiredMode.REQUIRED)
     private String teamB;
 
